@@ -1,4 +1,5 @@
 ### config parser
+import pdb
 def parse_pml_config_analysis(pml_config_analysis, analysis_dir_in, analysis_dir_out, name):
     in_file_name = os.path.join(analysis_dir_in,'{}.wav'.format(name))
     if not os.path.isfile(in_file_name):
@@ -8,13 +9,14 @@ def parse_pml_config_analysis(pml_config_analysis, analysis_dir_in, analysis_dir
     out_file_dict['mgc'] = os.path.join(analysis_dir_out,'{}.fwspec'.format(name))
     out_file_dict['bap'] = os.path.join(analysis_dir_out,'{}.fwnm'.format(name))
     
-    for k,v in pml_config_analysis.items():
-        if v=='{PH_fwav}': pml_config_analysis[k] = in_file_name
-        elif v=='{PH_lf0}': pml_config_analysis[k] = out_file_dict['lf0']
-        elif v=='{PH_mgc}': pml_config_analysis[k] = out_file_dict['mgc']
-        elif v=='{PH_bap}': pml_config_analysis[k] = out_file_dict['bap']
-    
-    return pml_config_analysis
+    pml_config_analysis_out = dict(pml_config_analysis)
+    for k,v in pml_config_analysis_out.items():
+        if v=='{PH_fwav}': pml_config_analysis_out[k] = in_file_name
+        elif v=='{PH_lf0}': pml_config_analysis_out[k] = out_file_dict['lf0']
+        elif v=='{PH_mgc}': pml_config_analysis_out[k] = out_file_dict['mgc']
+        elif v=='{PH_bap}': pml_config_analysis_out[k] = out_file_dict['bap']
+            
+    return pml_config_analysis_out
 
 def parse_pml_config_synthesis(pml_config_synthesis, synthesis_dir_in, synthesis_dir_out, name):
     in_file_dict = {} 
@@ -23,13 +25,14 @@ def parse_pml_config_synthesis(pml_config_synthesis, synthesis_dir_in, synthesis
     in_file_dict['bap'] = os.path.join(synthesis_dir_in,'{}.fwnm'.format(name))
     out_file_name = os.path.join(synthesis_dir_out,'{}.wav'.format(name))
     
-    for k,v in pml_config_synthesis.items():
-        if v=='{PH_fsyn}': pml_config_synthesis[k] = out_file_name
-        elif v=='{PH_lf0}': pml_config_synthesis[k] = in_file_dict['lf0']
-        elif v=='{PH_mgc}': pml_config_synthesis[k] = in_file_dict['mgc']
-        elif v=='{PH_bap}': pml_config_synthesis[k] = in_file_dict['bap']
+    pml_config_synthesis_out = dict(pml_config_synthesis)
+    for k,v in pml_config_synthesis_out.items():
+        if v=='{PH_fsyn}': pml_config_synthesis_out[k] = out_file_name
+        elif v=='{PH_lf0}': pml_config_synthesis_out[k] = in_file_dict['lf0']
+        elif v=='{PH_mgc}': pml_config_synthesis_out[k] = in_file_dict['mgc']
+        elif v=='{PH_bap}': pml_config_synthesis_out[k] = in_file_dict['bap']
     
-    return pml_config_synthesis
+    return pml_config_synthesis_out
 
 
 ### PML wrapper

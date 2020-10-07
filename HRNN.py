@@ -137,23 +137,36 @@ def get_flag_dict(args):
     flag_dict['QUANTLAB'] = args.quantlab
     flag_dict['WHICH_SET'] = args.which_set
     flag_dict['ACOUSTIC'] = args.acoustic
+#     flag_dict['CV'] = args.cv # this arg is only in 4t models for now
     flag_dict['GEN'] = (args.gen!='not_gen')
-    flag_dict['SPLIT'] = (args.split)
+    flag_dict['SPLIT'] = args.split
     flag_dict['MOL'] = (args.mol!=0)
     flag_dict['TR4T'] = args.tr4t
     return flag_dict
 
 # ---------------------------------------------- for dataset.py
 def get_file_lab_str(flag_dict,WHICH_SET):
-    tmp_dict = {'SPEECH':'speech','LESLEY':'lesley','NANCY':'nancy','VCBK':'voicebank'}
+    tmp_dict = {'SPEECH':'speech','LESLEY':'lesley','NANCY':'nancy','VCBK':'voicebank','LJ':'lj'}
     tmp_dataset = tmp_dict[WHICH_SET]
     tmp_norm = '_norm' if flag_dict['NORMED_ALRDY'] else ''
     # if WHICH_SET=='VCBK': tmp_norm += '_split'
     if flag_dict['SPLIT']: tmp_norm += '_split'
+    tmp_wav = flag_dict['WAV'] if 'WAV' in flag_dict else 'wav'
     
     tmp_cdv = 'trj' if flag_dict['ACOUSTIC'] else 'lab'
-    __speech_file = '{dataset}/npyData/wav/MA_8s{norm}/{PH}.npy'.format(dataset=tmp_dataset,norm=tmp_norm,PH='{}')
+    __speech_file = '{dataset}/npyData/{wav}/MA_8s{norm}/{PH}.npy'.format(wav=tmp_wav,dataset=tmp_dataset,norm=tmp_norm,PH='{}')
     __speech_file_lab = '{dataset}/npyData/{cdv}/MA_8s{norm}/{PH}_{cdv}.npy'.format(dataset=tmp_dataset,norm=tmp_norm,cdv=tmp_cdv,PH='{}')
+    
+    # fix enabling different conditioning vectors
+    if 'CV' in flag_dict:
+        __speech_file_lab = '{dataset}/npyData/{CV}/MA_8s{norm}/{PH}_{cdv}.npy'\
+        .format(dataset=tmp_dataset,norm=tmp_norm,cdv=tmp_cdv,PH='{}',CV=flag_dict['CV'])
+        
+    # fix enabling utt-level-normed wav
+    if flag_dict['NORMED_ALRDY'] and flag_dict['NORMED_UTT']:
+        __speech_file = '{dataset}/npyData/{wav}/MA_8s{norm}/{PH}.npy'\
+        .format(wav=tmp_wav,dataset=tmp_dataset,norm=tmp_norm+'_utt',PH='{}')
+    
     return __speech_file,__speech_file_lab
 
 

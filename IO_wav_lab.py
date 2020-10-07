@@ -28,18 +28,8 @@ def readLab(dirFile):
     data = data.reshape((data.shape[0]/601),601)
     return data
 
-# def load_binary_file(file_name, dimension):
-#     fid_lab = open(file_name, 'rb')
-#     features = numpy.fromfile(fid_lab, dtype=numpy.float32)
-#     fid_lab.close()
-#     # print file_name,features.size
-#     assert features.size % float(dimension) == 0.0,'specified dimension %s not compatible with data'%(dimension)
-#     features = features[:(dimension * (features.size / dimension))]
-#     features = features.reshape((-1, dimension))
-#     return  features
-
 def load_binary_file(file_name, dimension):
-    fid_lab = open(file_name, 'r')
+    fid_lab = open(file_name, 'rb')
     features = numpy.fromfile(fid_lab, dtype=numpy.float32)
     fid_lab.close()
     # print file_name,features.size
@@ -47,6 +37,16 @@ def load_binary_file(file_name, dimension):
     features = features[:(dimension * (features.size / dimension))]
     features = features.reshape((-1, dimension))
     return  features
+
+# def load_binary_file(file_name, dimension):
+#     fid_lab = open(file_name, 'r')
+#     features = numpy.fromfile(fid_lab, dtype=numpy.float32)
+#     fid_lab.close()
+#     # print file_name,features.size
+#     assert features.size % float(dimension) == 0.0,'specified dimension %s not compatible with data'%(dimension)
+#     features = features[:(dimension * (features.size / dimension))]
+#     features = features.reshape((-1, dimension))
+#     return  features
 
 class   BinaryIOCollection(object):
 
@@ -155,12 +155,12 @@ def printItemShape(d):
         print(k),
         print(v.shape)
 
-def checkIfMoreWav(wavs,labs):
+def checkIfMoreWav(wavs,labs,wav_fr=16000,lab_fr=200):
     cnt = 0
     cntPb = 0
     for wav,lab in zip(wavs,labs):
         cnt += 1
-        alignLen = lab.shape[0]*80
+        alignLen = lab.shape[0]*(wav_fr/lab_fr) # 80
         if wav.shape[0]<alignLen:
             cntPb += 1
             print('wav less than lab*80')
@@ -170,14 +170,14 @@ def checkIfMoreWav(wavs,labs):
         print('all is well, wav>lab')
     return
 
-def concatAll(wavs,labs):
+def concatAll(wavs,labs,wav_fr=16000,lab_fr=200):
     #input: list, speech_{}_utt.npy, speech_{}_utt_lab/traj.npy
     #output: array, wav_all_array,lab_all_array
     wav_all_array = np.array([])
     lab_all_array = np.array([])
 
     for wav,lab in zip(wavs,labs):
-        alignLen = lab.shape[0]*80
+        alignLen = lab.shape[0]*(wav_fr/lab_fr) # 80
         #wav_all_array = np.concatenate((wav_all_array,wav[-alignLen:]))
         wav_all_array = np.concatenate((wav_all_array,wav[:alignLen]))
         if len(lab_all_array)==0:
@@ -187,11 +187,19 @@ def concatAll(wavs,labs):
     
     return wav_all_array,lab_all_array
 
-def cutEqLen(wav_all_array,lab_all_array,lab_dim=601):
-    nb_sec = 8
+def concatAll_fast(wavs,labs,wav_fr=16000,lab_fr=200):
+    #input: list, speech_{}_utt.npy, speech_{}_utt_lab/traj.npy
+    #output: array, wav_all_array,lab_all_array
+    wavs = [w[:len(l)*(wav_fr/lab_fr)] for w,l in zip(wavs,labs)] # (wav_fr/lab_fr) = 80
+    wav_all_array = np.concatenate(wavs, axis=0)
+    lab_all_array = np.concatenate(labs, axis=0)
+    return wav_all_array,lab_all_array
+
+def cutEqLen(wav_all_array,lab_all_array,lab_dim=601,nb_sec=8,wav_fr=16000,lab_fr=200):
+    # nb_sec = 8
     # cut ending, reshape into 8-sec rows
     allLen = len(wav_all_array)
-    rowLen = nb_sec*16000
+    rowLen = nb_sec*wav_fr # 16000
     rowNb = allLen//rowLen
     wav_all_array_save = wav_all_array[:rowNb*rowLen].reshape(rowNb,rowLen)
     print('wav_all_array_save.shape:'),
@@ -199,7 +207,7 @@ def cutEqLen(wav_all_array,lab_all_array,lab_dim=601):
     
     # cut ending, reshape into 8-sec rows
     allLen = len(lab_all_array)
-    rowLen = nb_sec*16000/80
+    rowLen = nb_sec*lab_fr # 16000/80
     rowNb = allLen//rowLen
     lab_all_array_save = lab_all_array[:rowNb*rowLen].reshape(rowNb,rowLen,lab_dim)
     print('lab_all_array_save.shape:'),
